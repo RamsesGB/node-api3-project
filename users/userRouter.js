@@ -32,9 +32,10 @@ router.get("/", (req, res) => {
 
 router.get("/:id", (req, res) => {
   const { id } = req.params;
-
+  
   User.getById(id)
     .then((user) => {
+      console.log(` from GET /:id endpoint \n${JSON.stringify(user.name)}`)
       res.status(200).json(user);
     })
     .catch((err) => {
@@ -89,15 +90,32 @@ router.put("/:id", (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  // do your magic!
+  const {id} = req.params
+
+  User.getById( id )
+  .then( user => {
+    console.log(` from validation mid-ware`, user.id)
+    if (user.id) {
+      let user = req.user
+      next();
+    } else {
+      res.status(400).json({ message: "invalid user id" })
+    }
+  })
+  .catch( err => {
+    console.log(err)
+    res.status(500).json({ message: "server error" })
+  });
 }
 
 function validateUser(req, res, next) {
   // do your magic!
+  next();
 }
 
 function validatePost(req, res, next) {
   // do your magic!
+  next();
 }
 
 module.exports = router;
