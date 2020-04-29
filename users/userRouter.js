@@ -30,12 +30,12 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", validateUserId, (req, res) => {
   const { id } = req.params;
   
   User.getById(id)
     .then((user) => {
-      console.log(` from GET /:id endpoint \n${JSON.stringify(user.name)}`)
+      console.log(` from GET /:id endpoint \n${JSON.stringify(user)}`)
       res.status(200).json(user);
     })
     .catch((err) => {
@@ -46,7 +46,7 @@ router.get("/:id", (req, res) => {
     });
 });
 
-router.get("/:id/posts", (req, res) => {
+router.get("/:id/posts", validateUserId, (req, res) => {
   const { id } = req.params;
 
   User.getUserPosts(id)
@@ -94,9 +94,9 @@ function validateUserId(req, res, next) {
 
   User.getById( id )
   .then( user => {
-    console.log(` from validation mid-ware`, user.id)
-    if (user.id) {
-      let user = req.user
+    console.log(` from validation mid-ware`, user)
+    if (user) {
+      req.user = user;
       next();
     } else {
       res.status(400).json({ message: "invalid user id" })
