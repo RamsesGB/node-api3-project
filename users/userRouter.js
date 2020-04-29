@@ -30,11 +30,12 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", validateUserId, (req, res) => {
   const { id } = req.params;
-
+  
   User.getById(id)
     .then((user) => {
+      console.log(` from GET /:id endpoint \n${JSON.stringify(user)}`)
       res.status(200).json(user);
     })
     .catch((err) => {
@@ -45,7 +46,7 @@ router.get("/:id", (req, res) => {
     });
 });
 
-router.get("/:id/posts", (req, res) => {
+router.get("/:id/posts", validateUserId, (req, res) => {
   const { id } = req.params;
 
   User.getUserPosts(id)
@@ -89,15 +90,32 @@ router.put("/:id", (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  // do your magic!
+  const {id} = req.params
+
+  User.getById( id )
+  .then( user => {
+    console.log(` from validation mid-ware`, user)
+    if (user) {
+      req.user = user;
+      next();
+    } else {
+      res.status(400).json({ message: "invalid user id" })
+    }
+  })
+  .catch( err => {
+    console.log(err)
+    res.status(500).json({ message: "server error" })
+  });
 }
 
 function validateUser(req, res, next) {
   // do your magic!
+  next();
 }
 
 function validatePost(req, res, next) {
   // do your magic!
+  next();
 }
 
 module.exports = router;
