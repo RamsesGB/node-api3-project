@@ -4,7 +4,7 @@ const router = express.Router();
 const User = require("./userDb.js");
 
 router.post("/", validateUser, (req, res) => {
-  res.status(201).json(createdUser);
+  res.status(201).json(req.user);
 });
 
 router.post("/:id/posts", (req, res) => {});
@@ -100,18 +100,22 @@ function validateUserId(req, res, next) {
     });
 }
 
+// The bulk of the work for the POST "/" endpoint is happening in this middleware function
+// I refactored it this way because I realized calling User.insert() in the route handler as well as in this function caused a bug
+// that caused the same object to be created twice which threw a SQLITE error
 function validateUser(req, res, next) {
   User.insert(req.body)
     .then((createdUser) => {
       console.log(`from user validate mid-ware \n`, createdUser);
-      if (createdUser) {
-        next();
-      } else {
+      if (!createdUser) {
         res.status(400).json({ message: "missing user data" });
+      } else {
+        req.user = createdUser;
+        next();
       }
     })
     .catch((err) => {
-      console.log(`Mid-ware Error msg = `, err);
+      console.log(`Mid-ware Error msg = ${err}`);
       res.status(500).json({ message: "server error" });
     });
 }
